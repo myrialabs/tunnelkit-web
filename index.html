@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TunnelKit | Cloudflare Tunnels for Node &amp; Bun</title>
+  <meta name="description" content="A typed, event-driven API and CLI over all three Cloudflare tunnel modes — Quick, Remote, and Local. Manages the binary, persists your tunnels, fires typed events. Zero dependencies, runs on Node 18+ and Bun." />
+  <meta name="keywords" content="Cloudflare Tunnels, cloudflared, trycloudflare, quick tunnel, named tunnel, remote tunnel, tunnel CLI, Node.js, Bun, TypeScript, zero dependencies, MyriaLabs" />
+  <meta name="author" content="MyriaLabs" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://tunnelkit.myrialabs.dev" />
+  <meta name="theme-color" content="#f38020" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="apple-touch-icon" href="favicon.svg" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://tunnelkit.myrialabs.dev" />
+  <meta property="og:title" content="TunnelKit | Cloudflare Tunnels for Node &amp; Bun" />
+  <meta property="og:description" content="A typed, event-driven API and CLI over all three Cloudflare tunnel modes — Quick, Remote, and Local. Manages the binary, persists your tunnels, fires typed events. Zero dependencies, runs on Node 18+ and Bun." />
+  <meta property="og:site_name" content="TunnelKit" />
+
+  <!-- Twitter / X -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="TunnelKit | Cloudflare Tunnels for Node &amp; Bun" />
+  <meta name="twitter:description" content="A typed, event-driven API and CLI over all three Cloudflare tunnel modes — Quick, Remote, and Local. Zero dependencies, runs on Node 18+ and Bun." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-0: #060608;
+      --bg-1: #0e0e14;
+      --bg-2: #13131d;
+      --bg-3: #1c1c2e;
+      --bg-4: #252540;
+      --border: rgba(255,255,255,0.07);
+      --border-bright: rgba(255,255,255,0.13);
+      --text-0: #f1f0ff;
+      --text-1: #b0aed0;
+      --text-2: #6b68a0;
+      --accent-1: #f38020;
+      --accent-2: #ffaa66;
+      --accent-dark: #c66a0d;
+      --accent-deeper: #e87722;
+      --accent-glow: rgba(243,128,32,0.28);
+      --accent-glow-2: rgba(255,170,102,0.15);
+      --syn-comment: #5a5a78;
+      --syn-keyword: #f38020;
+      --syn-string: #86efac;
+      --syn-number: #fbbf24;
+      --syn-fn: #93c5fd;
+      --syn-prop: #c4b5fd;
+      --syn-punct: #6b68a0;
+      --radius: 14px;
+      --radius-lg: 20px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-0);
+      color: var(--text-0);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ---- NOISE OVERLAY ---- */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      background-size: 256px 256px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    /* ---- AMBIENT GLOWS ---- */
+    .glow-orb {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(110px);
+      opacity: 0.3;
+      z-index: 0;
+    }
+    .glow-orb-1 { width: 700px; height: 700px; background: radial-gradient(circle, #f38020 0%, transparent 70%); top: -250px; left: -200px; }
+    .glow-orb-2 { width: 500px; height: 500px; background: radial-gradient(circle, #c66a0d 0%, transparent 70%); bottom: -120px; right: -100px; opacity: 0.22; }
+    .glow-orb-3 { width: 400px; height: 400px; background: radial-gradient(circle, #d97706 0%, transparent 70%); top: 55%; left: 42%; opacity: 0.16; }
+
+    /* ---- LAYOUT ---- */
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; min-width: 0; }
+
+    /* ---- NAV ---- */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 14px 24px;
+      background: rgba(6,6,8,0.75);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 18px; font-weight: 700; color: var(--text-0);
+      text-decoration: none; letter-spacing: -0.3px;
+    }
+    .nav-logo-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      overflow: hidden;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .nav-logo-icon svg { width: 100%; height: 100%; display: block; }
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-links a {
+      color: var(--text-1); text-decoration: none;
+      font-size: 14px; font-weight: 500;
+      padding: 7px 14px;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .nav-links a:hover { color: var(--text-0); background: var(--bg-3); }
+    .btn-nav {
+      padding: 8px 18px !important;
+      background: linear-gradient(135deg, var(--accent-1), var(--accent-dark)) !important;
+      color: white !important;
+      border-radius: 8px;
+    }
+    .btn-nav:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 20px var(--accent-glow); }
+
+    /* ---- HERO ---- */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(243,128,32,0.1);
+      border: 1px solid rgba(243,128,32,0.3);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 12px; font-weight: 500;
+      color: var(--accent-2);
+      margin-bottom: 32px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .hero h1 {
+      font-size: clamp(42px, 7vw, 80px);
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -2px;
+      margin-bottom: 24px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .grad-text {
+      background: linear-gradient(135deg, #ffd6a8 0%, var(--accent-1) 50%, var(--accent-deeper) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-desc {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--text-1);
+      max-width: 640px;
+      margin: 0 auto 48px;
+      line-height: 1.7;
+      text-align: center;
+    }
+    .hero-cta { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin-bottom: 80px; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, var(--accent-1), var(--accent-dark));
+      color: white; text-decoration: none;
+      padding: 14px 28px; border-radius: 12px;
+      font-size: 15px; font-weight: 600;
+      transition: all 0.2s;
+      box-shadow: 0 0 0 1px rgba(243,128,32,0.3), 0 8px 32px rgba(243,128,32,0.25);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(243,128,32,0.5), 0 16px 48px rgba(243,128,32,0.35); }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--bg-3);
+      border: 1px solid var(--border-bright);
+      color: var(--text-0); text-decoration: none;
+      padding: 14px 28px; border-radius: 12px;
+      font-size: 15px; font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { background: var(--bg-4); border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
+
+    /* ---- HERO MOCKUP ---- */
+    .hero-mockup-wrap { width: 100%; max-width: 880px; position: relative; min-width: 0; }
+    .hero-mockup {
+      background: var(--bg-2);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 40px 100px rgba(0,0,0,0.7), 0 0 80px rgba(243,128,32,0.12);
+      position: relative;
+      min-width: 0;
+      max-width: 100%;
+    }
+    /* .hero-mockup::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, transparent 60%, var(--bg-0) 100%);
+      z-index: 2;
+      pointer-events: none;
+    } */
+    .window-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 14px 16px;
+      background: var(--bg-3);
+      border-bottom: 1px solid var(--border);
+    }
+    .win-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .win-dot-r { background: #ff5f57; }
+    .win-dot-y { background: #febc2e; }
+    .win-dot-g { background: #28c840; }
+    .win-title {
+      flex: 1; text-align: center;
+      font-size: 12px; font-weight: 500; color: var(--text-2);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .mockup-body {
+      padding: 22px 26px;
+      background: var(--bg-1);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.85;
+      color: var(--text-0);
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+    }
+    .mockup-body pre { margin: 0; white-space: pre; overflow-x: auto; max-width: 100%; line-height: 1.3; }
+    .tk-comment { color: var(--syn-comment); font-style: italic; }
+    .tk-keyword { color: var(--syn-keyword); }
+    .tk-string  { color: var(--syn-string); }
+    .tk-number  { color: var(--syn-number); }
+    .tk-fn      { color: var(--syn-fn); }
+    .tk-prop    { color: var(--syn-prop); }
+    .tk-punct   { color: var(--syn-punct); }
+    .tk-var     { color: var(--text-0); }
+    .tk-output  { color: var(--accent-2); }
+    .tk-dim     { color: var(--text-2); }
+    .hero-code  { font-size: 14.5px; padding: 28px 32px; line-height: 1.95; }
+
+    /* ---- SECTION ---- */
+    section { position: relative; z-index: 1; }
+    .section-header { text-align: center; margin-bottom: 64px; }
+    .section-tag {
+      display: inline-block;
+      font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--accent-2);
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: clamp(28px, 4vw, 42px);
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+    .section-desc { font-size: 17px; color: var(--text-1); max-width: 580px; margin: 0 auto; line-height: 1.7; }
+
+    /* ---- FEATURES ---- */
+    .features-section { padding: 80px 0 100px; }
+    .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .feature-card {
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: border-color 0.25s, background 0.25s, transform 0.25s, box-shadow 0.25s;
+      position: relative;
+      cursor: default;
+    }
+    .feature-card:hover {
+      border-color: rgba(243,128,32,0.38);
+      background: var(--bg-2);
+      transform: translateY(-3px);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.3), 0 0 32px rgba(243,128,32,0.08);
+    }
+    .feature-icon {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(243,128,32,0.22);
+      background: rgba(243,128,32,0.08);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+      transition: border-color 0.25s, background 0.25s;
+      color: var(--accent-2);
+    }
+    .feature-card:hover .feature-icon {
+      border-color: rgba(243,128,32,0.5);
+      background: rgba(243,128,32,0.15);
+    }
+    .feature-title {
+      font-size: 15px; font-weight: 600; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .feature-desc { font-size: 13px; color: var(--text-1); line-height: 1.65; }
+
+    /* ---- SHOWCASE ---- */
+    .showcase-section { padding: 80px 0 100px; }
+    .showcase-content { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+    .showcase-text h3 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 16px; }
+    .showcase-text p { font-size: 15px; color: var(--text-1); line-height: 1.7; margin-bottom: 24px; }
+    .showcase-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .showcase-list li {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 14px; color: var(--text-1);
+    }
+    .check { color: var(--accent-2); font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .showcase-img-wrap {
+      background: var(--bg-2);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(243,128,32,0.06);
+      min-width: 0;
+      max-width: 100%;
+    }
+
+    /* ---- INSTALL ---- */
+    .install-section { padding: 80px 0 100px; }
+    .install-card {
+      background: var(--bg-2);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      max-width: 780px; margin: 0 auto;
+    }
+    .install-header {
+      padding: 16px 20px;
+      background: var(--bg-3);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .install-step {
+      display: flex; align-items: stretch;
+      border-bottom: 1px solid var(--border);
+    }
+    .install-step:last-child { border-bottom: none; }
+    .install-step-num {
+      width: 52px; min-height: 60px;
+      background: var(--bg-3);
+      border-right: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; color: var(--text-2);
+      flex-shrink: 0;
+    }
+    .install-step-content { padding: 16px 20px; flex: 1; }
+    .install-step-label { font-size: 11px; color: var(--text-2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .code-line {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px; color: var(--text-0);
+      background: var(--bg-1);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .code-prompt { color: var(--accent-1); user-select: none; }
+    .code-text { flex: 1; }
+    .code-copy {
+      cursor: pointer; color: var(--text-2);
+      font-size: 12px; padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-2);
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+    .code-copy:hover { background: var(--bg-3); color: var(--text-0); }
+
+    /* ---- TECH STACK ---- */
+    .tech-section { padding: 60px 0 80px; }
+    .tech-grid { max-width: 900px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 48px; margin-left: auto; margin-right: auto; }
+    .tech-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 8px 18px;
+      font-size: 13px; font-weight: 500; color: var(--text-1);
+      transition: all 0.2s;
+    }
+    .tech-badge:hover { border-color: rgba(243,128,32,0.4); color: var(--text-0); background: var(--bg-3); }
+    .tech-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ---- CTA SECTION ---- */
+    .cta-section { padding: 100px 0; text-align: center; }
+    .cta-card {
+      background: linear-gradient(135deg, rgba(243,128,32,0.1) 0%, rgba(198,106,13,0.06) 100%);
+      border: 1px solid rgba(243,128,32,0.22);
+      border-radius: 24px;
+      padding: 80px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(243,128,32,0.18) 0%, transparent 65%);
+    }
+    .cta-card h2 { font-size: clamp(28px, 4vw, 48px); line-height: 1.25; font-weight: 700; letter-spacing: -1px; margin-bottom: 20px; position: relative; z-index: 1; }
+    .cta-card p { font-size: 17px; color: var(--text-1); margin-bottom: 40px; position: relative; z-index: 1; }
+    .cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; position: relative; z-index: 1; }
+
+    /* ---- FOOTER ---- */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0 32px;
+    }
+    .footer-inner {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 24px; flex-wrap: wrap; margin-bottom: 28px;
+    }
+    .footer-brand { display: flex; align-items: center; gap: 10px; }
+    .footer-brand-name { font-size: 16px; font-weight: 700; }
+    .footer-links-row { display: flex; align-items: center; gap: 4px; }
+    .footer-links-row a {
+      color: var(--text-2); text-decoration: none;
+      font-size: 14px; padding: 6px 12px; border-radius: 8px;
+      transition: color 0.2s;
+    }
+    .footer-links-row a:hover { color: var(--text-1); }
+    .footer-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
+    .footer-bottom-text { font-size: 13px; color: var(--text-2); }
+    .footer-tagline { font-size: 12px; color: var(--text-2); font-family: 'JetBrains Mono', monospace; }
+
+    /* ---- ANIMATIONS ---- */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in   { animation: fadeInUp 0.7s ease forwards; }
+    .fade-in-2 { animation: fadeInUp 0.7s 0.15s ease forwards; opacity: 0; }
+    .fade-in-3 { animation: fadeInUp 0.7s 0.3s  ease forwards; opacity: 0; }
+    .fade-in-4 { animation: fadeInUp 0.7s 0.45s ease forwards; opacity: 0; }
+    .fade-in-5 { animation: fadeInUp 0.7s 0.6s  ease forwards; opacity: 0; }
+
+    /* ---- SCROLLBAR ---- */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-0); }
+    ::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 4px; }
+
+    /* ---- RESPONSIVE ---- */
+    @media (max-width: 900px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .showcase-content { grid-template-columns: 1fr; }
+      .showcase-content > * { min-width: 0; }
+    }
+    @media (max-width: 640px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .nav-links a:not(.btn-nav) { display: none; }
+      .cta-card { padding: 48px 24px; }
+      .footer-inner { flex-direction: column; align-items: flex-start; }
+      .hero-code { font-size: 11.5px; padding: 18px 16px; }
+      .mockup-body { font-size: 11px; padding: 14px 16px; }
+      .hero { padding: 110px 16px 60px; }
+      .container { padding: 0 16px; }
+      .mockup-body pre { white-space: pre-wrap; word-break: break-word; }
+      .hero h1 { font-size: 36px; letter-spacing: -1px; }
+      .section-title { font-size: 26px; }
+      .showcase-text h3 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glow-orb glow-orb-1"></div>
+  <div class="glow-orb glow-orb-2"></div>
+  <div class="glow-orb glow-orb-3"></div>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <div class="nav-logo-icon">
+          <img src="favicon.svg" alt="" width="32" height="32" />
+        </div>
+        TunnelKit
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#showcase">Preview</a>
+        <a href="#install">Install</a>
+        <a href="https://github.com/myrialabs/tunnelkit" class="btn-nav">GitHub →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-badge fade-in">
+        Open Source · Zero Dependencies · TypeScript
+      </div>
+      <h1 class="fade-in-2">
+        Expose localhost.<br/><span class="grad-text">Effortlessly.</span>
+      </h1>
+      <p class="hero-desc fade-in-3">
+        A typed, event-driven API and CLI over all three Cloudflare tunnel modes — Quick, Remote, and Local.
+        Manages the binary, persists your tunnels, fires typed events.
+        Zero dependencies. Runs on Node 18+ and Bun.
+      </p>
+      <div class="hero-cta fade-in-4">
+        <a href="#install" class="btn-primary">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Get Started
+        </a>
+        <a href="https://github.com/myrialabs/tunnelkit" class="btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          View on GitHub
+        </a>
+      </div>
+
+      <div class="hero-mockup-wrap fade-in-5">
+        <div class="hero-mockup">
+          <div class="window-bar">
+            <div class="win-dot win-dot-r"></div>
+            <div class="win-dot win-dot-y"></div>
+            <div class="win-dot win-dot-g"></div>
+            <div class="win-title">quick-start.ts</div>
+          </div>
+          <div class="mockup-body hero-code">
+<pre><span class="tk-keyword">import</span> { <span class="tk-fn">TunnelKit</span> } <span class="tk-keyword">from</span> <span class="tk-string">'tunnelkit'</span><span class="tk-punct">;</span>
+
+<span class="tk-keyword">const</span> <span class="tk-var">tk</span> <span class="tk-punct">=</span> <span class="tk-keyword">new</span> <span class="tk-fn">TunnelKit</span><span class="tk-punct">();</span>
+
+<span class="tk-keyword">await</span> <span class="tk-var">tk</span>.<span class="tk-prop">bin</span>.<span class="tk-fn">ensure</span><span class="tk-punct">();</span>
+
+<span class="tk-keyword">const</span> <span class="tk-punct">{</span> <span class="tk-var">publicUrl</span> <span class="tk-punct">}</span> <span class="tk-punct">=</span> <span class="tk-keyword">await</span> <span class="tk-var">tk</span>.<span class="tk-prop">quick</span>.<span class="tk-fn">start</span><span class="tk-punct">({</span> <span class="tk-prop">service</span><span class="tk-punct">:</span> <span class="tk-number">3000</span> <span class="tk-punct">});</span>
+
+<span class="tk-comment">// → https://random-words.trycloudflare.com</span>
+<span class="tk-var">console</span>.<span class="tk-fn">log</span><span class="tk-punct">(</span><span class="tk-string">'Exposed at:'</span><span class="tk-punct">,</span> <span class="tk-var">publicUrl</span><span class="tk-punct">);</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" class="features-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Features</div>
+        <h2 class="section-title">Everything you need to tunnel,<br/><span class="grad-text">nothing you don't</span></h2>
+        <p class="section-desc">A complete, typed wrapper around Cloudflare's three tunnel modes — built to drop into any Node or Bun project without ceremony.</p>
+      </div>
+      <div class="features-grid">
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <div class="feature-title">Three Tunnel Modes</div>
+          <div class="feature-desc">Quick (TryCloudflare), Remote (token), and Local (named) — each behind its own namespace: <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.quick</code> · <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.remote</code> · <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.local</code>.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          </div>
+          <div class="feature-title">Fully Typed, End-to-End</div>
+          <div class="feature-desc"><code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">TunnelKit</code> and <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">CloudflaredTunnel</code> are typed <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">EventEmitter</code>s. Every method, every event — autocomplete, no <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">any</code>.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <div class="feature-title">Manages the Binary</div>
+          <div class="feature-desc">Downloads <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">cloudflared</code> on demand, or reuses one already on <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">PATH</code>. Call <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.bin.ensure()</code> for the common case, or pin a version with <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.bin.install()</code>.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg>
+          </div>
+          <div class="feature-title">Built-in Persistence</div>
+          <div class="feature-desc"><code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">TunnelStore</code> is on by default. Remote and local tunnels you start are saved to <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">config.json</code> so you can restore them on the next boot. Read them back via <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.store</code>.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+          </div>
+          <div class="feature-title">Live Multi-Tunnel CLI</div>
+          <div class="feature-desc">Run <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tunnelkit</code> with no args for a full-screen control panel — manage several tunnels at once: <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">[n]</code> new tunnel, <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">[↑/↓]</code> select, <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">[x]</code> stop, <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">[c]</code> copy URL, <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">[m]</code> manage saved.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          </div>
+          <div class="feature-title">Zero Runtime Dependencies</div>
+          <div class="feature-desc">Pure Node built-ins. No <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">node_modules</code> to audit, no supply-chain to worry about. The library's headline property.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <div class="feature-title">Cross-Runtime</div>
+          <div class="feature-desc">Runs identically on <strong>Node 18+</strong> and <strong>Bun</strong>. Same API, same behavior, no runtime-specific branches leaking into your code.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="feature-title">Smart Lifecycle</div>
+          <div class="feature-desc">Auto-stop quick tunnels after N minutes, configurable URL/connect timeouts, a multi-tunnel registry — the glue you would write anyway, baked in.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <div class="feature-title">Live Status &amp; Connections</div>
+          <div class="feature-desc"><code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">status-changed</code> fires on every start/stop and on every edge connection. <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.list()</code> carries live <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">connections[]</code> per tunnel.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 3"/></svg>
+          </div>
+          <div class="feature-title">Auto-Stop</div>
+          <div class="feature-desc">Quick tunnels can self-terminate with <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">autoStopMinutes</code> — perfect for demos, webhooks, and ephemeral previews.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+          </div>
+          <div class="feature-title">Orphan Recovery</div>
+          <div class="feature-desc"><code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.local.create</code> detects a same-named tunnel on Cloudflare that isn't tracked locally and has no active connections — then cleans it up and retries.</div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </div>
+          <div class="feature-title">Low-level Escape Hatch</div>
+          <div class="feature-desc">Drop down to <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">CloudflaredTunnel</code> for direct child-process control — <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">url</code>, <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">connected</code>, <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">stdout</code>/<code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">stderr</code> events on the raw process.</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- SHOWCASE -->
+  <section id="showcase" class="showcase-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">See It In Action</div>
+        <h2 class="section-title">Three modes,<br/><span class="grad-text">one unified API</span></h2>
+      </div>
+
+      <div class="showcase-content" style="margin-bottom: 80px;">
+        <div class="showcase-text">
+          <h3>One tree, three tunnels</h3>
+          <p>Every mode lives under the namespace that fits it. <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.quick</code> for demos and webhooks, <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.remote</code> for token-based tunnels, <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.local</code> for fully-named tunnels you control. Same patterns, same shapes.</p>
+          <ul class="showcase-list">
+            <li><span class="check">✓</span><span> Quick: <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.quick.start</code> / <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.quick.stop</code></span></li>
+            <li><span class="check">✓</span><span> Remote: <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.remote.start</code> / <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.remote.stop</code></span></li>
+            <li><span class="check">✓</span><span> Local: <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.local.login</code> · <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">create</code> · <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">routeDns</code> · <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">start</code></span></li>
+            <li><span class="check">✓</span><span> <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">service</code> can be a port, a localhost URL, or a full private IP:port</span></li>
+          </ul>
+        </div>
+        <div class="showcase-img-wrap">
+          <div class="window-bar">
+            <div class="win-dot win-dot-r"></div>
+            <div class="win-dot win-dot-y"></div>
+            <div class="win-dot win-dot-g"></div>
+            <div class="win-title">tk-modes.ts</div>
+          </div>
+          <div class="mockup-body">
+<pre><span class="tk-comment">// Quick — no account, random *.trycloudflare.com</span>
+<span class="tk-keyword">const</span> <span class="tk-punct">{</span> <span class="tk-var">publicUrl</span> <span class="tk-punct">}</span> <span class="tk-punct">=</span> <span class="tk-keyword">await</span> <span class="tk-var">tk</span>.<span class="tk-prop">quick</span>.<span class="tk-fn">start</span><span class="tk-punct">({</span>
+  <span class="tk-prop">service</span><span class="tk-punct">:</span> <span class="tk-number">3000</span><span class="tk-punct">,</span>
+  <span class="tk-prop">autoStopMinutes</span><span class="tk-punct">:</span> <span class="tk-number">30</span><span class="tk-punct">,</span>
+<span class="tk-punct">});</span>
+
+<span class="tk-comment">// Remote — token from Cloudflare dashboard</span>
+<span class="tk-keyword">const</span> <span class="tk-punct">{</span> <span class="tk-var">ingress</span> <span class="tk-punct">}</span> <span class="tk-punct">=</span> <span class="tk-keyword">await</span> <span class="tk-var">tk</span>.<span class="tk-prop">remote</span>.<span class="tk-fn">start</span><span class="tk-punct">({</span>
+  <span class="tk-prop">id</span><span class="tk-punct">:</span> <span class="tk-string">'my-app'</span><span class="tk-punct">,</span>
+  <span class="tk-prop">token</span><span class="tk-punct">:</span> <span class="tk-var">process</span>.<span class="tk-var">env</span>.<span class="tk-fn">CF_TUNNEL_TOKEN</span><span class="tk-punct">!,</span>
+<span class="tk-punct">});</span>
+
+<span class="tk-comment">// Local — named, full ingress control</span>
+<span class="tk-keyword">await</span> <span class="tk-var">tk</span>.<span class="tk-prop">local</span>.<span class="tk-fn">start</span><span class="tk-punct">({</span>
+  <span class="tk-prop">id</span><span class="tk-punct">:</span> <span class="tk-string">'storefront'</span><span class="tk-punct">,</span>  <span class="tk-comment">// your handle</span>
+  <span class="tk-prop">name</span><span class="tk-punct">:</span> <span class="tk-string">'acme-prod'</span><span class="tk-punct">,</span>  <span class="tk-comment">// Cloudflare name</span>
+  <span class="tk-prop">tunnelId</span><span class="tk-punct">,</span> <span class="tk-prop">credentialsFile</span><span class="tk-punct">,</span>
+  <span class="tk-prop">ingress</span><span class="tk-punct">:</span> <span class="tk-punct">[{</span>
+    <span class="tk-prop">hostname</span><span class="tk-punct">:</span> <span class="tk-string">'app.example.com'</span><span class="tk-punct">,</span>
+    <span class="tk-prop">service</span><span class="tk-punct">:</span> <span class="tk-string">'http://localhost:3000'</span><span class="tk-punct">,</span>
+  <span class="tk-punct">}],</span>
+<span class="tk-punct">});</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="showcase-content" style="margin-bottom: 80px; direction: rtl;">
+        <div class="showcase-text" style="direction: ltr;">
+          <h3>A full-screen control panel</h3>
+          <p>Run <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tunnelkit</code> with no arguments and you get a live TUI for managing every tunnel on the machine. Pick one, stop it, copy its URL, or open breadcrumbed wizards for new and saved tunnels — without leaving the terminal.</p>
+          <ul class="showcase-list">
+            <li><span class="check">✓</span><span> Listens to <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">status-changed</code> events to keep the list in sync</span></li>
+            <li><span class="check">✓</span><span> <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">[↑/↓]</code> select · <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">[n]</code> new tunnel · <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">[x]</code> stop · <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">[c]</code> copy URL · <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">[m]</code> manage saved</span></li>
+            <li><span class="check">✓</span><span> Breadcrumbed wizards use one-step <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">Esc</code> back navigation and persistent progress logs for create/route/start steps</span></li>
+            <li><span class="check">✓</span><span> Live status dot per tunnel — <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">●</code> connected · <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">○</code> disconnected · blinks while connecting</span></li>
+            <li><span class="check">✓</span><span> Confirms before <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">x</code>/<code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">q</code> when tunnels have live traffic</span></li>
+          </ul>
+        </div>
+        <div class="showcase-img-wrap" style="direction: ltr;">
+          <div class="window-bar">
+            <div class="win-dot win-dot-r"></div>
+            <div class="win-dot win-dot-y"></div>
+            <div class="win-dot win-dot-g"></div>
+            <div class="win-title">tunnelkit — control panel</div>
+          </div>
+          <div class="mockup-body">
+<pre>  <span class="tk-dim">tunnelkit &gt; tunnels</span>
+
+  <span class="tk-output">❯</span> <span class="tk-output">●</span>  <span class="tk-prop">quick-5173</span>     <span class="tk-dim">→</span>  <span class="tk-dim">https://abc.trycloudflare.com</span>
+    <span class="tk-output">○</span>  <span class="tk-prop">quick-3000</span>     <span class="tk-dim">→</span>  <span class="tk-dim">https://xyz.trycloudflare.com</span>
+    <span class="tk-output">●</span>  <span class="tk-prop">remotely-prod</span>  <span class="tk-dim">→</span>  <span class="tk-dim">2 routes</span>
+        <span class="tk-dim">- http://localhost:4001  →  app.example.com</span>
+        <span class="tk-dim">- http://localhost:4002  →  api.example.com</span>
+    <span class="tk-output">●</span>  <span class="tk-prop">locally-prod</span>   <span class="tk-dim">→</span>  <span class="tk-dim">2 routes</span>
+        <span class="tk-dim">- http://localhost:5001  →  shop.example.com</span>
+        <span class="tk-dim">- http://localhost:5002  →  blog.example.com</span>
+
+  <span class="tk-keyword">[↑/↓]</span> select   <span class="tk-keyword">[n]</span> new tunnel   <span class="tk-keyword">[x]</span> stop   <span class="tk-keyword">[c]</span> copy URL   <span class="tk-keyword">[m]</span> manage saved   <span class="tk-keyword">[q]</span> quit</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="showcase-content" style="margin-bottom: 80px;">
+        <div class="showcase-text">
+          <h3>Save by default, restore on startup</h3>
+          <p>Remote and local tunnels you start are saved to <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">~/.tunnelkit/config.json</code> by default (written <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">0600</code>). Change the location with a custom <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">dataDir</code>, or pass <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">store: false</code> to disable persistence.</p>
+          <ul class="showcase-list">
+            <li><span class="check">✓</span><span> On by default — no extra setup</span></li>
+            <li><span class="check">✓</span><span> Quick tunnels are ephemeral and never saved</span></li>
+            <li><span class="check">✓</span><span> Read saved tunnels back via <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.store</code> at any time</span></li>
+            <li><span class="check">✓</span><span> Restore everything on startup with <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.restoreAll()</code></span></li>
+          </ul>
+        </div>
+        <div class="showcase-img-wrap">
+          <div class="window-bar">
+            <div class="win-dot win-dot-r"></div>
+            <div class="win-dot win-dot-y"></div>
+            <div class="win-dot win-dot-g"></div>
+            <div class="win-title">restore-on-startup.ts</div>
+          </div>
+          <div class="mockup-body">
+<pre><span class="tk-keyword">import</span> <span class="tk-punct">{</span> <span class="tk-fn">TunnelKit</span> <span class="tk-punct">}</span> <span class="tk-keyword">from</span> <span class="tk-string">'tunnelkit'</span><span class="tk-punct">;</span>
+
+<span class="tk-comment">// Saves to ~/.tunnelkit/config.json by default.</span>
+<span class="tk-keyword">const</span> <span class="tk-var">tk</span> <span class="tk-punct">=</span> <span class="tk-keyword">new</span> <span class="tk-fn">TunnelKit</span><span class="tk-punct">();</span>
+
+<span class="tk-comment">// Inspect what's saved</span>
+<span class="tk-var">console</span>.<span class="tk-fn">log</span><span class="tk-punct">(</span><span class="tk-var">tk</span>.<span class="tk-prop">store</span>.<span class="tk-fn">getRemotes</span><span class="tk-punct">());</span>
+<span class="tk-comment">// → [{ id: 'prod', name: 'prod', token: '***' }]</span>
+
+<span class="tk-comment">// Restore everything on startup — one call</span>
+<span class="tk-keyword">await</span> <span class="tk-var">tk</span>.<span class="tk-fn">restoreAll</span><span class="tk-punct">();</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="showcase-content" style="margin-bottom: 80px; direction: rtl;">
+        <div class="showcase-text" style="direction: ltr;">
+          <h3>Events you can actually subscribe to</h3>
+          <p>A <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">TunnelKit</code> instance is a typed <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">EventEmitter</code> with three high-level events. <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">status-changed</code> is enough for a health view; <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">connection</code> gives per-edge detail (IP, location) as it happens.</p>
+          <ul class="showcase-list">
+            <li><span class="check">✓</span><span> <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">status-changed</code> — fires on every start, stop, and connection change</span></li>
+            <li><span class="check">✓</span><span> <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">ingress-update</code> — remote tunnel's ingress rules synced from Cloudflare</span></li>
+            <li><span class="check">✓</span><span> <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">connection</code> — an edge connection up/down, with <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">info.location</code></span></li>
+            <li><span class="check">✓</span><span> Low-level <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">CloudflaredTunnel</code> emits <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">url</code>, <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">connected</code>, <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">stdout</code>/<code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">stderr</code></span></li>
+          </ul>
+        </div>
+        <div class="showcase-img-wrap" style="direction: ltr;">
+          <div class="window-bar">
+            <div class="win-dot win-dot-r"></div>
+            <div class="win-dot win-dot-y"></div>
+            <div class="win-dot win-dot-g"></div>
+            <div class="win-title">events.ts</div>
+          </div>
+          <div class="mockup-body">
+<pre><span class="tk-keyword">const</span> <span class="tk-var">tk</span> <span class="tk-punct">=</span> <span class="tk-keyword">new</span> <span class="tk-fn">TunnelKit</span><span class="tk-punct">();</span>
+
+<span class="tk-var">tk</span>.<span class="tk-fn">on</span><span class="tk-punct">(</span><span class="tk-string">'status-changed'</span><span class="tk-punct">,</span> <span class="tk-punct">(</span><span class="tk-var">tunnels</span><span class="tk-punct">)</span> <span class="tk-punct">=&gt;</span> <span class="tk-punct">{</span>
+  <span class="tk-var">console</span>.<span class="tk-fn">log</span><span class="tk-punct">(</span><span class="tk-string">'Active:'</span><span class="tk-punct">,</span> <span class="tk-var">tunnels</span>.<span class="tk-fn">map</span><span class="tk-punct">(</span><span class="tk-var">t</span> <span class="tk-punct">=&gt;</span> <span class="tk-var">t</span>.<span class="tk-prop">id</span><span class="tk-punct">));</span>
+<span class="tk-punct">});</span>
+
+<span class="tk-var">tk</span>.<span class="tk-fn">on</span><span class="tk-punct">(</span><span class="tk-string">'ingress-update'</span><span class="tk-punct">,</span> <span class="tk-punct">({</span> <span class="tk-var">id</span><span class="tk-punct">,</span> <span class="tk-var">ingress</span> <span class="tk-punct">})</span> <span class="tk-punct">=&gt;</span> <span class="tk-punct">{</span>
+  <span class="tk-var">console</span>.<span class="tk-fn">log</span><span class="tk-punct">(</span><span class="tk-var">id</span><span class="tk-punct">,</span> <span class="tk-string">'ingress:'</span><span class="tk-punct">,</span> <span class="tk-var">ingress</span><span class="tk-punct">);</span>
+<span class="tk-punct">});</span>
+
+<span class="tk-var">tk</span>.<span class="tk-fn">on</span><span class="tk-punct">(</span><span class="tk-string">'connection'</span><span class="tk-punct">,</span> <span class="tk-punct">({</span> <span class="tk-var">id</span><span class="tk-punct">,</span> <span class="tk-var">info</span><span class="tk-punct">,</span> <span class="tk-var">status</span> <span class="tk-punct">})</span> <span class="tk-punct">=&gt;</span> <span class="tk-punct">{</span>
+  <span class="tk-var">console</span>.<span class="tk-fn">log</span><span class="tk-punct">(</span><span class="tk-var">id</span><span class="tk-punct">,</span> <span class="tk-var">status</span><span class="tk-punct">,</span> <span class="tk-var">info</span>.<span class="tk-prop">location</span>.<span class="tk-prop">ip</span><span class="tk-punct">);</span>
+<span class="tk-punct">});</span></pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="showcase-content">
+        <div class="showcase-text">
+          <h3>The binary is handled for you</h3>
+          <p>Everything shells out to <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">cloudflared</code>. tunnelkit resolves it from the managed <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">installDir</code> (default <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">~/.tunnelkit/bin</code>), then from <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">PATH</code>. The library never downloads on its own — you call <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.bin.ensure()</code> when you want it. The CLI does it for you on first use.</p>
+          <ul class="showcase-list">
+            <li><span class="check">✓</span><span> <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.bin.ensure()</code> — resolve, downloading on first use</span></li>
+            <li><span class="check">✓</span><span> <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.bin.status()</code> — <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">{ installed, version, path }</code></span></li>
+            <li><span class="check">✓</span><span> <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">tk.bin.install('2024.12.2')</code> — pin a specific version</span></li>
+            <li><span class="check">✓</span><span> Reuses an existing <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">cloudflared</code> from <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">brew</code>/<code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">apt</code>/<code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:12px;">winget</code> if found</span></li>
+          </ul>
+        </div>
+        <div class="showcase-img-wrap">
+          <div class="window-bar">
+            <div class="win-dot win-dot-r"></div>
+            <div class="win-dot win-dot-y"></div>
+            <div class="win-dot win-dot-g"></div>
+            <div class="win-title">terminal — tunnelkit install &amp; status</div>
+          </div>
+          <div class="mockup-body">
+<pre><span class="tk-dim">$</span> <span class="tk-var">tunnelkit</span> <span class="tk-var">install</span>
+<span class="tk-dim">Downloading cloudflared 2024.12.2…</span>
+<span class="tk-output">✓</span> Installed to <span class="tk-dim">~/.tunnelkit/bin/cloudflared</span>
+
+<span class="tk-dim">$</span> <span class="tk-var">tunnelkit</span> <span class="tk-var">status</span>
+  <span class="tk-dim">binary</span>   <span class="tk-string">cloudflared</span> 2024.12.2
+  <span class="tk-dim">path</span>     <span class="tk-dim">~/.tunnelkit/bin/cloudflared</span>
+
+<span class="tk-dim">$</span> <span class="tk-var">tunnelkit</span> <span class="tk-var">saved</span>
+  <span class="tk-dim">○</span>  <span class="tk-prop">storefront</span>   <span class="tk-dim">local   → app.example.com</span>
+  <span class="tk-dim">○</span>  <span class="tk-prop">remote-prod</span>  <span class="tk-dim">remote  remote-prod</span></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSTALL -->
+  <section id="install" class="install-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Installation</div>
+        <h2 class="section-title">Install &amp; <span class="grad-text">start tunneling</span></h2>
+        <p class="section-desc">Requires <a href="https://nodejs.org" style="color: var(--accent-2); text-decoration: none;">Node.js</a> v18+ or <a href="https://bun.sh" style="color: var(--accent-2); text-decoration: none;">Bun</a>. The CLI auto-downloads <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:14px;">cloudflared</code> on first use, or call <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:14px;">tk.bin.ensure()</code> programmatically.</p>
+      </div>
+      <div class="install-card">
+        <div class="install-header">
+          <div class="win-dot win-dot-r"></div>
+          <div class="win-dot win-dot-y"></div>
+          <div class="win-dot win-dot-g"></div>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-2); margin-left: 8px;">terminal</span>
+        </div>
+        <div class="install-step">
+          <div class="install-step-num">01</div>
+          <div class="install-step-content">
+            <div class="install-step-label">Install tunnelkit (global, for the CLI)</div>
+            <div class="code-line">
+              <span class="code-prompt">$</span>
+              <span class="code-text">npm install -g tunnelkit</span>
+              <button class="code-copy" onclick="copyCode(this, 'npm install -g tunnelkit')">copy</button>
+            </div>
+          </div>
+        </div>
+        <div class="install-step">
+          <div class="install-step-num">02</div>
+          <div class="install-step-content">
+            <div class="install-step-label">Expose a local port — done</div>
+            <div class="code-line">
+              <span class="code-prompt">$</span>
+              <span class="code-text">tunnelkit quick 3000</span>
+              <button class="code-copy" onclick="copyCode(this, 'tunnelkit quick 3000')">copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="text-align:center;margin-top:28px;font-size:14px;color:var(--text-2);">
+        Or as a library: <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:13px;">npm install tunnelkit</code> · <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:13px;">bun add tunnelkit</code>
+      </p>
+    </div>
+  </section>
+
+  <!-- TECH STACK -->
+  <section class="tech-section">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">Tech Stack</div>
+        <h2 class="section-title">Built with <span class="grad-text">zero dependencies</span></h2>
+        <p class="section-desc">Pure Node built-ins. TypeScript end-to-end. Runs identically on Node 18+ and Bun — no shims, no polyfills, no magic.</p>
+      </div>
+      <div class="tech-grid">
+        <span class="tech-badge"><span class="tech-dot" style="background:#f5f5f5;"></span>Node.js 18+</span>
+        <span class="tech-badge"><span class="tech-dot" style="background:#fbf0df;"></span>Bun</span>
+        <span class="tech-badge"><span class="tech-dot" style="background:#3178c6;"></span>TypeScript</span>
+        <span class="tech-badge"><span class="tech-dot" style="background:#f38020;"></span>cloudflared</span>
+        <span class="tech-badge"><span class="tech-dot" style="background:#c4b5fd;"></span>EventEmitter</span>
+        <span class="tech-badge"><span class="tech-dot" style="background:#fbbf24;"></span>ESM</span>
+
+        <span class="tech-badge"><span class="tech-dot" style="background:#10b981;"></span>Zero runtime deps</span>
+        <span class="tech-badge"><span class="tech-dot" style="background:#a78bfa;"></span>Typed events</span>
+        <span class="tech-badge"><span class="tech-dot" style="background:#f38020;"></span>TryCloudflare</span>
+        <span class="tech-badge"><span class="tech-dot" style="background:#ffaa66;"></span>Ingress rules</span>
+        <span class="tech-badge"><span class="tech-dot" style="background:#10b981;"></span>JSON store</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="container">
+      <div class="cta-card">
+        <h2>Ready to expose<br/>your localhost?</h2>
+        <p>Join developers shipping webhooks, demos, and remote previews with one typed, event-driven API over all three Cloudflare tunnel modes.</p>
+        <div class="cta-btns">
+          <a href="#install" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3M2 12h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Install Now
+          </a>
+          <a href="https://github.com/myrialabs/tunnelkit" class="btn-secondary">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            Star on GitHub
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <div class="nav-logo-icon" style="width:28px;height:28px;">
+            <img src="favicon.svg" alt="" width="28" height="28" />
+          </div>
+          <span class="footer-brand-name">TunnelKit</span>
+        </div>
+        <div class="footer-links-row">
+          <a href="https://github.com/myrialabs/tunnelkit">GitHub</a>
+          <a href="https://www.npmjs.com/package/tunnelkit">npm</a>
+          <a href="https://github.com/myrialabs/tunnelkit/issues">Issues</a>
+          <a href="https://github.com/myrialabs/tunnelkit/blob/main/LICENSE">License</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-bottom-text">© 2026 MyriaLabs. Open source under MIT License.</div>
+        <div class="footer-tagline">// expose localhost, effortlessly</div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function copyCode(btn, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = 'copied!';
+        btn.style.color = 'var(--accent-2)';
+        setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 2000);
+      });
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.08 });
+
+    document.querySelectorAll('.feature-card, .tech-badge, .showcase-img-wrap').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      observer.observe(el);
+    });
+
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const id = a.getAttribute('href').slice(1);
+        if (!id) return;
+        const el = document.getElementById(id);
+        if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+      });
+    });
+  </script>
+</body>
+</html>
