@@ -210,7 +210,7 @@
     .btn-secondary:hover { background: var(--bg-4); border-color: rgba(255,255,255,0.2); transform: translateY(-2px); }
 
     /* ---- HERO MOCKUP ---- */
-    .hero-mockup-wrap { width: 100%; max-width: 880px; position: relative; min-width: 0; }
+    .hero-mockup-wrap { width: 100%; max-width: 880px; margin: 0 auto; position: relative; min-width: 0; }
     .hero-mockup {
       background: var(--bg-2);
       border: 1px solid var(--border-bright);
@@ -550,7 +550,7 @@
             <div class="win-title">quick-start.ts</div>
           </div>
           <div class="mockup-body hero-code">
-<pre><span class="tk-keyword">import</span> { <span class="tk-fn">TunnelKit</span> } <span class="tk-keyword">from</span> <span class="tk-string">'tunnelkit'</span><span class="tk-punct">;</span>
+<pre><span class="tk-keyword">import</span> { <span class="tk-fn">TunnelKit</span> } <span class="tk-keyword">from</span> <span class="tk-string">'@myrialabs/tunnelkit'</span><span class="tk-punct">;</span>
 
 <span class="tk-keyword">const</span> <span class="tk-var">tk</span> <span class="tk-punct">=</span> <span class="tk-keyword">new</span> <span class="tk-fn">TunnelKit</span><span class="tk-punct">();</span>
 
@@ -785,7 +785,7 @@
             <div class="win-title">restore-on-startup.ts</div>
           </div>
           <div class="mockup-body">
-<pre><span class="tk-keyword">import</span> <span class="tk-punct">{</span> <span class="tk-fn">TunnelKit</span> <span class="tk-punct">}</span> <span class="tk-keyword">from</span> <span class="tk-string">'tunnelkit'</span><span class="tk-punct">;</span>
+<pre><span class="tk-keyword">import</span> <span class="tk-punct">{</span> <span class="tk-fn">TunnelKit</span> <span class="tk-punct">}</span> <span class="tk-keyword">from</span> <span class="tk-string">'@myrialabs/tunnelkit'</span><span class="tk-punct">;</span>
 
 <span class="tk-comment">// Saves to ~/.tunnelkit/config.json by default.</span>
 <span class="tk-keyword">const</span> <span class="tk-var">tk</span> <span class="tk-punct">=</span> <span class="tk-keyword">new</span> <span class="tk-fn">TunnelKit</span><span class="tk-punct">();</span>
@@ -893,8 +893,8 @@
             <div class="install-step-label">Install tunnelkit (global, for the CLI)</div>
             <div class="code-line">
               <span class="code-prompt">$</span>
-              <span class="code-text">npm install -g tunnelkit</span>
-              <button class="code-copy" onclick="copyCode(this, 'npm install -g tunnelkit')">copy</button>
+              <span class="code-text">npm install -g @myrialabs/tunnelkit</span>
+              <button class="code-copy" onclick="copyCode(this, 'npm install -g @myrialabs/tunnelkit')">copy</button>
             </div>
           </div>
         </div>
@@ -911,7 +911,7 @@
         </div>
       </div>
       <p style="text-align:center;margin-top:28px;font-size:14px;color:var(--text-2);">
-        Or as a library: <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:13px;">npm install tunnelkit</code> · <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:13px;">bun add tunnelkit</code>
+        Or as a library: <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:13px;">npm install @myrialabs/tunnelkit</code> · <code style="color:var(--accent-2);font-family:'JetBrains Mono',monospace;font-size:13px;">bun add @myrialabs/tunnelkit</code>
       </p>
     </div>
   </section>
@@ -975,7 +975,7 @@
         </div>
         <div class="footer-links-row">
           <a href="https://github.com/myrialabs/tunnelkit">GitHub</a>
-          <a href="https://www.npmjs.com/package/tunnelkit">npm</a>
+          <a href="https://www.npmjs.com/package/@myrialabs/tunnelkit">npm</a>
           <a href="https://github.com/myrialabs/tunnelkit/issues">Issues</a>
           <a href="https://github.com/myrialabs/tunnelkit/blob/main/LICENSE">License</a>
         </div>
